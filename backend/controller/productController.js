@@ -73,15 +73,23 @@ const getSingleProduct =handleAsyncError(async(req,res,next) =>{
 })
 
 
+//get all products (Admin)
+const getAdminProducts = handleAsyncError(async(req,res,next)=>{
+    const products =await Product.find();
+    res.status(200).json({success:true,products})
+})
+
+
 
 
 
 module.exports = {      
-    createProduct,
+   createProduct,
    getAllProducts,
    updateProduct,
    deleteProduct,
-   getSingleProduct
+   getSingleProduct,
+   getAdminProducts
 }
 
 

@@ -2,6 +2,7 @@ const express = require("express")
 const mongoose = require("mongoose")
 const validator = require("validator")
 const bcrypt = require("bcrypt")
+ const crypto = require("crypto");
 
 const userModelSchema = new mongoose.Schema({
 
@@ -36,11 +37,14 @@ const userModelSchema = new mongoose.Schema({
         role:{
             type:String,
             default:"user"
-        },
-        resetPasswordToken:String,
-        resetPasswordExpire:Date
+        }
 
-    } 
+        
+
+    }, 
+
+    resetPasswordToken:String,
+        resetPasswordExpire:Date
 
 
 
@@ -50,12 +54,27 @@ const userModelSchema = new mongoose.Schema({
 
 //Hashing password
 
-userModelSchema.pre("save",async function(){
-    this.password = await bcrypt.hash(this.password,10)
+userModelSchema.pre("save",async function(next){
+   
     if(!this.isModified("password")){
-        next()
+         return next()
     }
+     this.password = await bcrypt.hash(this.password,10)
+       next()   
+     
 })
+//verify password
+userModelSchema.methods.comparePassword = async function(enteredPassword){
+    return await bcrypt.compare(enteredPassword,this.password)
+}
 
+userModelSchema.methods.generateResetPasswordToken = function(){
+   
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // Token valid for 15 minutes
+    return resetToken;
+
+}
 
 module.exports = mongoose.model("User", userModelSchema)
